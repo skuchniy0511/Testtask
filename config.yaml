@@ -1,0 +1,3 @@
+logFile: ./logfile.log
+clientsInputPath: ./clients.txt
+serverWaitTimeSeconds: 5
