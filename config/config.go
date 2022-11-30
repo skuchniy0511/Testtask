@@ -2,7 +2,6 @@ package config
 
 import (
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 )
 
@@ -11,10 +10,11 @@ type Config struct {
 	LogFilePath           string `yaml:"logFile"`
 	ClientsInputPath      string `yaml:"clientsInputPath"`
 	ServerWaitTimeSeconds int64  `yaml:"serverWaitTimeSeconds"`
+	QueneName             string ` yaml:"QueneBroker"`
 }
 
 func LoadConfig(path string) (*Config, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

@@ -14,9 +14,8 @@ import (
 )
 
 type Client struct {
-	Conn     *amqp.Connection
 	ConnChan *amqp.Channel
-	Quene    *types.Item
+	Quene    string
 }
 
 func NewClient(conf *config.Config) (*Client, error) {
@@ -24,27 +23,16 @@ func NewClient(conf *config.Config) (*Client, error) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer conn.Close()
 
 	channelConn, err := conn.Channel()
 	if err != nil {
 		panic(err)
 	}
-
-	return &Client{
-		Conn:     conn,
-		ConnChan: channelConn,
-	}, nil
-}
-
-func (c *Client) SendMessage(item *types.Item) {
-
-	req, err := json.Marshal(item)
-	if err != nil {
-		panic(err)
-	}
-	q, err := c.ConnChan.QueueDeclare(
-		c.Quene.Action, // queue name
+	defer channelConn.Close()
+	q, err := channelConn.QueueDeclare(
+		conf.QueneName, // queue name
 		true,           // durable
 		false,          // auto delete
 		false,          // exclusive
@@ -56,17 +44,29 @@ func (c *Client) SendMessage(item *types.Item) {
 	}
 	fmt.Println(q)
 
+	return &Client{
+		ConnChan: channelConn,
+		Quene:    conf.QueneName,
+	}, nil
+}
+
+func (c *Client) SendMessage(item *types.Item) {
+
+	req, err := json.Marshal(item)
+	if err != nil {
+		panic(err)
+	}
+
 	// attempt to publish a message to the queue!
 	err = c.ConnChan.Publish(
 		"",
-		c.Quene.Action,
+		c.Quene,
 		false,
 		false,
 		amqp.Publishing{
-
-			ContentType: "text/plain",
-
-			Body: req,
+			ContentType:  "application/json",
+			Body:         req,
+			DeliveryMode: amqp.Persistent,
 		},
 	)
 	if err != nil {
@@ -148,7 +148,10 @@ func (cm *ClientsManager) ListenClientActions() error {
 			return nil
 		case line := <-lines:
 			if len(line) != 0 {
-				go cm.processClientAction(line)
+				err := cm.processClientAction(line)
+				if err != nil {
+					return err
+				}
 			}
 		case err := <-errChan:
 			if err != nil {

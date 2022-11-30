@@ -21,12 +21,12 @@ func main() {
 		panic(err)
 	}
 
-	server, err := server.NewServer(cfg)
+	serverR, err := server.NewServer(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	go server.StartServer()
+	go serverR.StartServer()
 
 	clientsManager, err := client.NewClientsManager(cfg)
 	if err != nil {

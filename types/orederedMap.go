@@ -1,13 +1,19 @@
 package types
 
+import "sync"
+
 type OrderedMap struct {
-	dict map[string]*Element
-	list List
+	dict    map[string]*Element
+	list    List
+	dataMux sync.RWMutex
+	logsMux sync.Mutex
 }
 
 func NewOrderedMap() *OrderedMap {
 	return &OrderedMap{
-		dict: make(map[string]*Element),
+		dict:    make(map[string]*Element),
+		dataMux: sync.RWMutex{},
+		logsMux: sync.Mutex{},
 	}
 }
 
@@ -30,6 +36,12 @@ func (m *OrderedMap) Get(key string) (value string, ok bool) {
 	}
 
 	return
+}
+func (m *OrderedMap) Lock() {
+	m.dataMux.Lock()
+}
+func (m *OrderedMap) Unlock() {
+	m.logsMux.Unlock()
 }
 
 func (m *OrderedMap) Delete(key string) (didDelete bool) {

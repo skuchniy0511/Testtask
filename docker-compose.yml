@@ -15,9 +15,9 @@ services:
     networks:
       - dev-network
 
-  # Create service with Fiber sender.
+
   sender:
-    container_name: sender
+    container_name: messageSender
     ports:
       - 3000:3000
     build:
@@ -31,20 +31,6 @@ services:
     depends_on:
       - message-broker
 
-  # Create service with message consumer.
-  consumer:
-    container_name: consumer
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      AMQP_SERVER_URL: amqp://guest:guest@message-broker:5672/
-    restart: always
-    networks:
-      - dev-network
-    depends_on:
-      - sender
-      - message-broker
 
 networks:
   # Create a new Docker network.
