@@ -10,7 +10,6 @@ type Config struct {
 	LogFilePath           string `yaml:"logFile"`
 	ClientsInputPath      string `yaml:"clientsInputPath"`
 	ServerWaitTimeSeconds int64  `yaml:"serverWaitTimeSeconds"`
-	QueneName             string ` yaml:"QueneBroker"`
 }
 
 func LoadConfig(path string) (*Config, error) {

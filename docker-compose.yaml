@@ -24,8 +24,12 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      AMQP_SERVER_URL: amqp://guest:guest@message-broker:5672/
+     - logfile_path=/logfile.log
+     - client_input_path=/clients.txt
+     - AMQP_SERVER_URL=amqp://guest:guest@localhost:5672/
     restart: always
+
+    entrypoint: testproject --config   ./config.yaml
     networks:
       - dev-network
     depends_on:

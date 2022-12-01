@@ -14,7 +14,7 @@ import (
 
 type Server struct {
 	data     *types.OrderedMap
-	Queue    string
+	Consumer string
 	channel  *amqp.Channel
 	queueUrl string
 	waitTime int64
@@ -24,16 +24,10 @@ type Server struct {
 	logger   log15.Logger
 }
 
-func NewServer(conf *config.Config) (*Server, error) {
-	conn, err := amqp.Dial(conf.AmqpUrl)
-	if err != nil {
-		panic(err)
-	}
+const consumer = "Consumer"
+const QueneName = "NameQuene"
 
-	ch, err := conn.Channel()
-	if err != nil {
-		panic(err)
-	}
+func NewServer(conf *config.Config, ch *amqp.Channel) (*Server, error) {
 
 	logger := log15.New("service", "server")
 	logger.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
@@ -51,11 +45,11 @@ func NewServer(conf *config.Config) (*Server, error) {
 	return &Server{
 		data: types.NewOrderedMap(),
 
-		channel: ch,
-		ctx:     ctx,
-		Cancel:  cancel,
-		Queue:   conf.QueneName,
-		logger:  logger,
+		channel:  ch,
+		ctx:      ctx,
+		Cancel:   cancel,
+		Consumer: consumer,
+		logger:   logger,
 
 		waitTime: conf.ServerWaitTimeSeconds,
 		logFile:  logFile,
@@ -63,7 +57,6 @@ func NewServer(conf *config.Config) (*Server, error) {
 }
 
 func (s *Server) StartServer() error {
-
 	s.logger.Debug("Listening queue!")
 	messagesChan := make(chan *amqp.Delivery, 50)
 	listenMsg := make(chan byte)
@@ -95,8 +88,13 @@ func (s *Server) listenMessages(messagesChan chan byte) {
 func (s *Server) receiveMessages(messages chan *amqp.Delivery) chan error {
 	errChan := make(chan error)
 
+	_, err := s.channel.QueueDeclare(QueneName, false, false, false, false, nil)
+	if err != nil {
+		return nil
+	}
+	//fmt.Println(declare)
 	msgs, err := s.channel.Consume(
-		s.Queue,
+		QueneName,
 		"",
 		true,
 		false,
@@ -108,12 +106,17 @@ func (s *Server) receiveMessages(messages chan *amqp.Delivery) chan error {
 	}
 
 	// create a goroutine for the number of concurrent threads requested
-
 	go func() {
+		var Msg amqp.Delivery
 		for msg := range msgs {
-			_ = fmt.Sprintf("Try to recieve a message %s\n", msg.Body)
+
+			fmt.Printf("Try to recieve a message %s\n", msg.Body)
+			Msg = msg
 		}
+
 		fmt.Println("Rabbit consumer closed - critical Error")
+
+		messages <- &Msg
 		os.Exit(1)
 	}()
 

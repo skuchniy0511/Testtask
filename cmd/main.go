@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/streadway/amqp"
 	"testask/client"
 
 	"testask/config"
@@ -20,8 +21,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	serverR, err := server.NewServer(cfg)
+	ch, err := GetConnection(cfg)
+	if err != nil {
+		panic(err)
+	}
+	serverR, err := server.NewServer(cfg, ch)
 	if err != nil {
 		panic(err)
 	}
@@ -39,17 +43,14 @@ func main() {
 	}
 }
 
-func StartServerAsync(conf *config.Config) chan error {
-	errChan := make(chan error)
-	server, err := server.NewServer(conf)
+func GetConnection(conf *config.Config) (*amqp.Channel, error) {
+	conn, err := amqp.Dial(conf.AmqpUrl)
 	if err != nil {
-		errChan <- err
+		return &amqp.Channel{}, err
 	}
-	go func() {
-		err = server.StartServer()
-		if err != nil {
-			errChan <- err
-		}
-	}()
-	return errChan
+	ch, err := conn.Channel()
+	if err != nil {
+		return &amqp.Channel{}, err
+	}
+	return ch, nil
 }

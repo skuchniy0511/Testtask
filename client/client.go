@@ -18,26 +18,26 @@ type Client struct {
 	Quene    string
 }
 
+const QueneName = "NameQuene"
+
 func NewClient(conf *config.Config) (*Client, error) {
 	conn, err := amqp.Dial(conf.AmqpUrl)
 	if err != nil {
 		panic(err)
 	}
 
-	defer conn.Close()
-
 	channelConn, err := conn.Channel()
 	if err != nil {
 		panic(err)
 	}
-	defer channelConn.Close()
+
 	q, err := channelConn.QueueDeclare(
-		conf.QueneName, // queue name
-		true,           // durable
-		false,          // auto delete
-		false,          // exclusive
-		false,          // no wait
-		nil,            // arguments
+		QueneName, // queue name
+		false,     // durable
+		false,     // auto delete
+		false,     // exclusive
+		false,     // no wait
+		nil,       // arguments
 	)
 	if err != nil {
 		panic(err)
@@ -46,7 +46,7 @@ func NewClient(conf *config.Config) (*Client, error) {
 
 	return &Client{
 		ConnChan: channelConn,
-		Quene:    conf.QueneName,
+		Quene:    QueneName,
 	}, nil
 }
 
