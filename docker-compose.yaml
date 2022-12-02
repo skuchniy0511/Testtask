@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     environment:
      - logfile_path=/logfile.log
-     - client_input_path=/clients.txt
+     - client_input_path=/clientsExamples.txt
      - AMQP_SERVER_URL=amqp://guest:guest@localhost:5672/
     restart: always
 

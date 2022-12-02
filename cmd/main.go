@@ -10,14 +10,14 @@ import (
 )
 
 func main() {
-	configFilePathFlag := flag.String("config", "./config.yaml", "Path to config file")
+	FilePathFlag := flag.String("config", "./config.yaml", "Path to config file")
 	flag.Parse()
 
-	if configFilePathFlag == nil {
+	if FilePathFlag == nil {
 		panic("Specify config file path with --config flag")
 	}
 
-	cfg, err := config.LoadConfig(*configFilePathFlag)
+	cfg, err := config.LoadCfg(*FilePathFlag)
 	if err != nil {
 		panic(err)
 	}
@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	serverR, err := server.NewServer(cfg, ch)
 	if err != nil {
 		panic(err)
@@ -32,7 +33,7 @@ func main() {
 
 	go serverR.StartServer()
 
-	clientsManager, err := client.NewClientsManager(cfg)
+	clientsManager, err := client.ClientsManager(cfg)
 	if err != nil {
 		panic(err)
 	}

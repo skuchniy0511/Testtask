@@ -1,4 +1,4 @@
 logFile: ./logfile.log
-clientsInputPath: ./clients.txt
+clientsInputPath: ./clientsExamples.txt
 serverWaitTimeSeconds: 5
 AMQP_SERVER_URL: amqp://guest:guest@localhost:5672/

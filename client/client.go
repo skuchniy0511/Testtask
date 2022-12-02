@@ -74,27 +74,27 @@ func (c *Client) SendMessage(item *types.Item) {
 	}
 }
 
-func (c *Client) AddItem(key, value string) {
-	item := &types.Item{Action: "AddItem", Key: key, Value: value}
+func (c *Client) AddI(key, value string) {
+	item := &types.Item{Method: "AddItem", Key: key, Value: value}
 	go c.SendMessage(item)
 }
 
-func (c *Client) GetItem(key string) {
-	item := &types.Item{Action: "GetItem", Key: key}
+func (c *Client) GetI(key string) {
+	item := &types.Item{Method: "GetItem", Key: key}
 	go c.SendMessage(item)
 }
 
-func (c *Client) GetAllItems() {
-	item := &types.Item{Action: "GetAllItems"}
+func (c *Client) GetAllI() {
+	item := &types.Item{Method: "GetAllItems"}
 	go c.SendMessage(item)
 }
 
-func (c *Client) RemoveItem(key string) {
-	item := &types.Item{Action: "RemoveItem", Key: key}
+func (c *Client) DeleteI(key string) {
+	item := &types.Item{Method: "DeleteItem", Key: key}
 	go c.SendMessage(item)
 }
 
-type ClientsManager struct {
+type ClientManager struct {
 	clients   map[string]*ClientUsage
 	input     *os.File
 	clientCfg *config.Config
@@ -108,7 +108,7 @@ type ClientUsage struct {
 	lastUsed time.Time
 }
 
-func NewClientsManager(cfg *config.Config) (manager *ClientsManager, err error) {
+func ClientsManager(cfg *config.Config) (manager *ClientManager, err error) {
 	input := os.Stdin
 	if len(cfg.ClientsInputPath) != 0 {
 		input, err = os.Open(cfg.ClientsInputPath)
@@ -117,7 +117,7 @@ func NewClientsManager(cfg *config.Config) (manager *ClientsManager, err error) 
 		}
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	return &ClientsManager{
+	return &ClientManager{
 		clients:   make(map[string]*ClientUsage),
 		mux:       sync.Mutex{},
 		input:     input,
@@ -127,7 +127,7 @@ func NewClientsManager(cfg *config.Config) (manager *ClientsManager, err error) 
 	}, nil
 }
 
-func (cm *ClientsManager) ListenClientActions() error {
+func (cm *ClientManager) ListenClientActions() error {
 	if cm.input == os.Stdin {
 		fmt.Println("Write clients tasks here in format <clientId> <item>")
 	}
@@ -136,7 +136,7 @@ func (cm *ClientsManager) ListenClientActions() error {
 	go func() {
 		for {
 			<-ticker.C
-			cm.removeUnusedClients()
+			cm.deleteUnusedClients()
 		}
 	}()
 
@@ -148,7 +148,7 @@ func (cm *ClientsManager) ListenClientActions() error {
 			return nil
 		case line := <-lines:
 			if len(line) != 0 {
-				err := cm.processClientAction(line)
+				err := cm.ClientAction(line)
 				if err != nil {
 					return err
 				}
@@ -161,7 +161,7 @@ func (cm *ClientsManager) ListenClientActions() error {
 	}
 }
 
-func (cm *ClientsManager) removeUnusedClients() {
+func (cm *ClientManager) deleteUnusedClients() {
 	cm.mux.Lock()
 	defer cm.mux.Unlock()
 	for clientId, clientUsage := range cm.clients {
@@ -172,7 +172,7 @@ func (cm *ClientsManager) removeUnusedClients() {
 
 }
 
-func (cm *ClientsManager) processClientAction(inputStr string) error {
+func (cm *ClientManager) ClientAction(inputStr string) error {
 	cm.mux.Lock()
 	defer cm.mux.Unlock()
 	if len(inputStr) <= 1 {

@@ -10,9 +10,10 @@ type Config struct {
 	LogFilePath           string `yaml:"logFile"`
 	ClientsInputPath      string `yaml:"clientsInputPath"`
 	ServerWaitTimeSeconds int64  `yaml:"serverWaitTimeSeconds"`
+	QueneName             string "QueneName"
 }
 
-func LoadConfig(path string) (*Config, error) {
+func LoadCfg(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
